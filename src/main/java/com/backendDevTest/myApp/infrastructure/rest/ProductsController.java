@@ -1,6 +1,6 @@
-package com.backendDevTest.myApp.infrastructure.adapters.in;
+package com.backendDevTest.myApp.infrastructure.rest;
 
-import com.backendDevTest.myApp.domain.model.ProductDetails;
+import com.backendDevTest.myApp.infrastructure.dto.ProductDetailsDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,11 +14,11 @@ import reactor.core.publisher.Mono;
 public class ProductsController {
 
     @GetMapping("/product/{id}/similar")
-    public Mono<ResponseEntity<Flux<ProductDetails>>> getSimilarProducts(@PathVariable String id) {
+    public Mono<ResponseEntity<Flux<ProductDetailsDto>>> getSimilarProducts(@PathVariable String id) {
 
         //:TODO Implement the logic to fetch similar products based on the provided product ID.
         // For now, returning an empty Flux to simulate the response.
-        Flux<ProductDetails> similarProducts = Flux.empty();
+        var similarProducts = Flux.<ProductDetailsDto>empty();
 
         return similarProducts.hasElements()
                 .map(hasElements -> hasElements
