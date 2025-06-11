@@ -3,9 +3,9 @@ package com.backendDevTest.myApp.infrastructure.adapters.in.kafka;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
-import com.backendDevTest.myApp.application.ports.ProductAPIPort;
 import com.backendDevTest.myApp.domain.events.ProductsSimilarIdsEvent;
 import com.backendDevTest.myApp.domain.events.ResponseProductDetailsEvent;
+import com.backendDevTest.myApp.domain.port.out.EventPublisherPort;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +15,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class KafkaAdapterConsumer {
 
-    private final ProductAPIPort productAPIPort;
+    private static final String SIMILAR_PRODUCTS_IDS = "SIMILAR_PRODUCTS_IDS";
+    private static final String SIMILAR_PRODUCTS_DETAILS_FETCHED = "SIMILAR_PRODUCTS_DETAILS_FETCHED";
+
+    private final EventPublisherPort eventPublisherPort;
 
     @KafkaListener(topics = "similar-product-ids", groupId = "product-service")
     public void listenForSimilarProductIds(ProductsSimilarIdsEvent event) {
@@ -27,7 +30,7 @@ public class KafkaAdapterConsumer {
             event.productIds().subscribe(
                     productId -> {
                         log.debug("Fetching similar product IDs for product ID: {}", productId);
-                        productAPIPort.requestProductDetails(productId);
+                        eventPublisherPort.publishEvent(SIMILAR_PRODUCTS_IDS, productId);
                     },
                     error -> log.error("Error fetching similar product IDs: {}", error.getMessage()),
                     () -> log.info("Completed processing similar product IDs for event: {}", event));
