@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.myapps.myapp.domain.model.ProductDetails;
-import com.myapps.myapp.domain.port.in.GetSimilarProductsUseCase;
+import com.myapps.myapp.domain.port.in.SimilarProductsUseCase;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -24,7 +24,7 @@ import reactor.core.publisher.Mono;
 @RestController
 public class ProductsController {
 
-    private final GetSimilarProductsUseCase getSimilarProductsUseCase;
+    private final SimilarProductsUseCase getSimilarProductsUseCase;
 
     @Operation(summary = "Get similar products", description = "Retrieves a list of products similar to the specified product ID.")
     @ApiResponses(value = {

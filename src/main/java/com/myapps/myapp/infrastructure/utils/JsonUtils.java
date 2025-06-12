@@ -1,8 +1,15 @@
 package com.myapps.myapp.infrastructure.utils;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class JsonUtils {
 
     private JsonUtils() {
@@ -41,6 +48,24 @@ public class JsonUtils {
             return mapper.writeValueAsString(object);
         } catch (JsonProcessingException e) {
             throw new IllegalArgumentException("Failed to parse JSON", e);
+        }
+    }
+
+    public static List<String> parseJsonToList(String json) {
+        try {
+            if (json == null || json.isBlank()) {
+                log.warn("Empty or null JSON response");
+                return Collections.emptyList();
+            }
+            String cleanedJson = json.strip().replace("[", "").replace("]", "");
+            if (cleanedJson.isEmpty()) {
+                log.warn("Empty JSON response after cleaning: {}", json);
+                return Collections.emptyList();
+            }
+            return Arrays.asList(cleanedJson.split(","));
+        } catch (Exception e) {
+            log.error("Error parsing JSON response: {}", json, e);
+            throw new IllegalArgumentException("Failed to parse JSON to list", e);
         }
     }
 

@@ -4,7 +4,7 @@ import com.myapps.myapp.domain.model.ProductDetails;
 
 import reactor.core.publisher.Flux;
 
-public interface GetSimilarProductsUseCase {
+public interface SimilarProductsUseCase {
     /**
      * Retrieves similar products with details based on the provided product ID.
      *

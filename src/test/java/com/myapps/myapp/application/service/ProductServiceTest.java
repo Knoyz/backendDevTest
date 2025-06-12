@@ -23,8 +23,7 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 class ProductServiceTest {
 
-        private static final String SIMILAR_PRODUCTS_IDS = "SIMILAR_PRODUCTS_IDS";
-        private static final String SIMILAR_PRODUCTS_DETAILS_FETCHED = "SIMILAR_PRODUCTS_DETAILS_FETCHED";
+        private static final String SIMILAR_PRODUCTS_DETAILS_FETCH = "SIMILAR_PRODUCTS_DETAILS_FETCH";
 
         @Mock
         private SimilarProductsByIdPort similarProductsByIdPort;
@@ -36,7 +35,7 @@ class ProductServiceTest {
         private EventPublisherPort eventPublisherPort;
 
         @InjectMocks
-        private ProductService productService;
+        private SimilarProductsUseCaseService productService;
 
         @BeforeEach
         void setUp() {
@@ -69,11 +68,11 @@ class ProductServiceTest {
                                 .verifyComplete();
 
                 // Verificar interacciones con los mocks
-                verify(eventPublisherPort).publishEvent(SIMILAR_PRODUCTS_IDS, productId);
+                verify(eventPublisherPort).publishGetSimilarProductsEvent(productId, productId);
                 verify(similarProductsByIdPort).getSimilarProducts(productId);
                 verify(productDetailsByIdPort).getProductDetailsById("456");
                 verify(productDetailsByIdPort).getProductDetailsById("789");
-                verify(eventPublisherPort).publishEvent(SIMILAR_PRODUCTS_DETAILS_FETCHED, productId);
+                verify(eventPublisherPort).publishFetchProductDetailsEvent(SIMILAR_PRODUCTS_DETAILS_FETCH, productId);
                 verifyNoMoreInteractions(eventPublisherPort, similarProductsByIdPort, productDetailsByIdPort);
         }
 
@@ -95,9 +94,9 @@ class ProductServiceTest {
                                 .verify();
 
                 // Verificar interacciones
-                verify(eventPublisherPort).publishEvent(SIMILAR_PRODUCTS_IDS, productId);
+                verify(eventPublisherPort).publishGetSimilarProductsEvent(productId, productId);
                 verify(similarProductsByIdPort).getSimilarProducts(productId);
-                verify(eventPublisherPort).publishEvent(SIMILAR_PRODUCTS_DETAILS_FETCHED, productId);
+                verify(eventPublisherPort).publishFetchProductDetailsEvent(SIMILAR_PRODUCTS_DETAILS_FETCH, productId);
                 verifyNoMoreInteractions(eventPublisherPort, similarProductsByIdPort);
                 verifyNoInteractions(productDetailsByIdPort);
         }
@@ -122,7 +121,7 @@ class ProductServiceTest {
                                 .verify();
 
                 // Verificar interacciones
-                verify(eventPublisherPort).publishEvent(SIMILAR_PRODUCTS_IDS, productId);
+                verify(eventPublisherPort).publishGetSimilarProductsEvent(productId, productId);
                 verify(similarProductsByIdPort).getSimilarProducts(productId);
                 verifyNoMoreInteractions(eventPublisherPort, similarProductsByIdPort);
                 verifyNoInteractions(productDetailsByIdPort);
@@ -151,7 +150,7 @@ class ProductServiceTest {
                                 .verify();
 
                 // Verificar interacciones
-                verify(eventPublisherPort).publishEvent(SIMILAR_PRODUCTS_IDS, productId);
+                verify(eventPublisherPort).publishGetSimilarProductsEvent(similarId, productId);
                 verify(similarProductsByIdPort).getSimilarProducts(productId);
                 verify(productDetailsByIdPort).getProductDetailsById(similarId);
                 verifyNoMoreInteractions(eventPublisherPort, similarProductsByIdPort, productDetailsByIdPort);

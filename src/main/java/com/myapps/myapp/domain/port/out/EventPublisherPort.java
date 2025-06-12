@@ -9,5 +9,8 @@ public interface EventPublisherPort {
      * @param productId The unique identifier of the product for which similar
      *                  products are available
      */
-    void publishEvent(String eventType, String productId);
+    void publishGetSimilarProductsEvent(String eventType, String productId);
+
+    void publishFetchProductDetailsEvent(String eventType, String productId);
+
 }

@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.example.product.grpc";
+option java_outer_classname = "ExternalProductProto";
+
+service ExternalProductService {
+    rpc GetSimilarProductIds (SimilarProductIdsRequest) returns (SimilarProductIdsResponse) {}
+    rpc GetProductDetails (ProductDetailsRequest) returns (ProductDetailsResponse) {}
+}
+
+message SimilarProductIdsRequest {
+    string product_id = 1;
+}
+
+message SimilarProductIdsResponse {
+    repeated string product_ids = 1;
+}
+
+message ProductDetailsRequest {
+    string product_id = 1;
+}
+
+message ProductDetailsResponse {
+    string id = 1;
+    string name = 2;
+    double price = 4;
+    bool availability = 5;
+}
