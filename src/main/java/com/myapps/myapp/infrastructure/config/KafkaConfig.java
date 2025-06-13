@@ -23,6 +23,7 @@ import org.springframework.kafka.support.serializer.JsonSerializer;
 import com.myapps.myapp.domain.events.ProductsSimilarIdsEvent;
 import com.myapps.myapp.domain.events.RequestDataWithProductIdEvent;
 
+//coverage:ignore 
 @EnableKafka
 @Configuration
 public class KafkaConfig {

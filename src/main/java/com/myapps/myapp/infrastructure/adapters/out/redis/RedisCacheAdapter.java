@@ -42,33 +42,6 @@ public class RedisCacheAdapter implements CachePort {
                     // Flatten the list of lists into a single Flux of strings
                     return Flux.fromIterable(k);
                 });
-
-        // .opsForList()
-        // .range(key, 0, -1) // Flux<List<String>>
-        // .collectList() // Mono<List<List<String>>>
-        // .flatMapMany(listOfLists -> {
-        // if (listOfLists == null || listOfLists.isEmpty()) {
-        // log.info("Cache miss or empty for key: {}", key);
-        // return Flux.empty();
-        // }
-
-        // // Flatten all lists into one
-        // return Flux.fromIterable(
-        // listOfLists.stream()
-        // .flatMap(List::stream)
-        // .toList());
-        // })
-        // .doOnSubscribe(subscription -> log.debug("Subscribed to cache for similar IDs
-        // key: {}", key))
-        // .onErrorResume(e -> {
-        // if (e instanceof RedisCommandExecutionException) {
-        // log.error("Redis command execution error for key: {}", key, e);
-        // return Flux.empty();
-
-        // }
-        // log.error("Error retrieving cached similar products for key: {}", key, e);
-        // return Flux.empty();
-        // });
     }
 
     @Override
