@@ -11,5 +11,5 @@ public interface SimilarProductsByIdPort {
      *                  products are to be fetched.
      * @return A Flux of ids of similar products.
      */
-    Flux<String> getSimilarProducts(String productId);
+    Flux<String> getIdsOfSimilarProducts(String productId);
 }

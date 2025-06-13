@@ -44,7 +44,7 @@ public class SimilarProductsUseCaseService implements SimilarProductsUseCase {
 
                 return cachePort.getCachedSimilarProducts(productId)
                                 .switchIfEmpty(
-                                                similarProductsByIdPort.getSimilarProducts(productId)
+                                                similarProductsByIdPort.getIdsOfSimilarProducts(productId)
                                                                 .doOnNext(similarId -> {
                                                                         if (similarId == null) {
                                                                                 log.warn("No similar products found for product ID: {}",
@@ -71,7 +71,8 @@ public class SimilarProductsUseCaseService implements SimilarProductsUseCase {
          * @param similarProductId A unique identifier for the similar product.
          * @return A Mono containing the product details, or empty if not found.
          */
-        private Mono<ProductDetails> fetchProductDetails(String similarId) {
+        @Override
+        public Mono<ProductDetails> fetchProductDetails(String similarId) {
 
                 return cachePort.getCachedProductDetails(similarId)
                                 .switchIfEmpty(

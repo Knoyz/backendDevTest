@@ -3,6 +3,7 @@ package com.myapps.myapp.domain.port.in;
 import com.myapps.myapp.domain.model.ProductDetails;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public interface SimilarProductsUseCase {
     /**
@@ -13,5 +14,13 @@ public interface SimilarProductsUseCase {
      * @return A Flux of ProductDetails containing details of similar products.
      */
     Flux<ProductDetails> getSimilarProducts(String productId);
+
+    /**
+     * Fetches product details by its unique identifier.
+     *
+     * @param productId A unique identifier for the product.
+     * @return A Mono containing the product details, or empty if not found.
+     */
+    Mono<ProductDetails> fetchProductDetails(String productId);
 
 }

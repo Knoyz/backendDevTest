@@ -41,7 +41,7 @@ public class SimilarProductsAdapter implements SimilarProductsByIdPort {
      * @return A Flux of ids of similar products.
      */
     @Override
-    public Flux<String> getSimilarProducts(String productId) {
+    public Flux<String> getIdsOfSimilarProducts(String productId) {
         log.info("Fetching similar products for productId: {}", productId);
 
         return webClient.get()
