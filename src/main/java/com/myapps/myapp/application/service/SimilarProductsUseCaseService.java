@@ -10,7 +10,6 @@ import com.myapps.myapp.domain.port.out.CachePort;
 import com.myapps.myapp.domain.port.out.EventPublisherPort;
 import com.myapps.myapp.domain.port.out.ProductDetailsByIdPort;
 import com.myapps.myapp.domain.port.out.SimilarProductsByIdPort;
-import com.myapps.myapp.infrastructure.utils.JsonUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,16 +39,30 @@ public class SimilarProductsUseCaseService implements SimilarProductsUseCase {
          */
         @Override
         public Flux<ProductDetails> getSimilarProducts(String productId) {
-                eventPublisherPort.publishGetSimilarProductsEvent(SIMILAR_PRODUCTS_IDS, productId);
+                // eventPublisherPort.publishGetSimilarProductsEvent(SIMILAR_PRODUCTS_IDS,
+                // productId);
 
                 return cachePort.getCachedSimilarProducts(productId)
                                 .switchIfEmpty(
                                                 similarProductsByIdPort.getSimilarProducts(productId)
-                                                                .doOnNext(similarId -> cachePort.cacheSimilarProducts(
-                                                                                productId, Flux.just(similarId), TTL)))
+                                                                .doOnNext(similarId -> {
+                                                                        if (similarId == null) {
+                                                                                log.warn("No similar products found for product ID: {}",
+                                                                                                productId);
+                                                                                return;
+                                                                        } else {
+                                                                                log.info("Caching similar product ID: {} for product ID: {}",
+                                                                                                similarId, productId);
+                                                                                cachePort.cacheSimilarProducts(
+                                                                                                productId,
+                                                                                                Flux.just(similarId),
+                                                                                                TTL);
+                                                                        }
+                                                                }))
                                 .flatMap(this::fetchProductDetails)
-                                .doOnNext(details -> eventPublisherPort.publishFetchProductDetailsEvent(
-                                                SIMILAR_PRODUCTS_DETAILS_FETCH, JsonUtils.toJson(details)));
+                                .filter(details -> details != null && details.getId() != null);
+                // .doOnNext(details -> eventPublisherPort.publishFetchProductDetailsEvent(
+                // SIMILAR_PRODUCTS_DETAILS_FETCH, JsonUtils.toJson(details)));
         }
 
         /**
@@ -59,10 +72,21 @@ public class SimilarProductsUseCaseService implements SimilarProductsUseCase {
          * @return A Mono containing the product details, or empty if not found.
          */
         private Mono<ProductDetails> fetchProductDetails(String similarId) {
+
                 return cachePort.getCachedProductDetails(similarId)
                                 .switchIfEmpty(
                                                 productDetailsByIdPort.getProductDetailsById(similarId)
-                                                                .doOnNext(details -> cachePort.cacheProductDetails(
-                                                                                similarId, Mono.just(details), TTL)));
+                                                                .doOnNext(details -> {
+                                                                        if (details == null
+                                                                                        || details.getId() == null) {
+                                                                                log.warn("No details found for similar product ID: {}",
+                                                                                                similarId);
+                                                                        } else {
+                                                                                cachePort.cacheProductDetails(
+                                                                                                similarId,
+                                                                                                Mono.just(details),
+                                                                                                TTL);
+                                                                        }
+                                                                }));
         }
 }

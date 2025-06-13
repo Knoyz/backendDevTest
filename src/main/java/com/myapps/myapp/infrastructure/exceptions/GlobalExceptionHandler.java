@@ -3,6 +3,7 @@ package com.myapps.myapp.infrastructure.exceptions;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -34,14 +35,15 @@ public class GlobalExceptionHandler {
                 "NOT_FOUND", HttpStatus.NOT_FOUND.value());
     }
 
-    @ExceptionHandler(WebClientResponseException.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public Error handleWebClientResponseException(WebClientResponseException e, ServerWebExchange exchange) {
+    @ExceptionHandler(WebClientResponseException.ServiceUnavailable.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public Error handleWebClientResponseException(WebClientResponseException.ServiceUnavailable e,
+            ServerWebExchange exchange) {
         String uriPath = exchange.getRequest().getURI().getPath();
         return new Error("WebClient Error", e.getMessage(), e.getResponseBodyAsString(),
                 LocalDateTime.now().format(DATE_TIME_FORMAT),
                 uriPath,
-                "INTERNAL_SERVER_ERROR", HttpStatus.INTERNAL_SERVER_ERROR.value());
+                "SERVICE_UNAVAILABLE", HttpStatus.SERVICE_UNAVAILABLE.value());
     }
 
     @ExceptionHandler(InvalidResponseException.class)
@@ -82,6 +84,16 @@ public class GlobalExceptionHandler {
                 LocalDateTime.now().format(DATE_TIME_FORMAT),
                 uriPath,
                 "INTERNAL_SERVER_ERROR", HttpStatus.INTERNAL_SERVER_ERROR.value());
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Error handleResourceNotFoundException(ResourceNotFoundException e, ServerWebExchange exchange) {
+        String uriPath = exchange.getRequest().getURI().getPath();
+        return new Error("Resource Not Found", e.getMessage(), e.getClass().getName(),
+                LocalDateTime.now().format(DATE_TIME_FORMAT),
+                uriPath,
+                "NOT_FOUND", HttpStatus.NOT_FOUND.value());
     }
 
 }

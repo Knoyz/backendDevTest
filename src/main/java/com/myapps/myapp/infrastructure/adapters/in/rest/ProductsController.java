@@ -1,5 +1,7 @@
 package com.myapps.myapp.infrastructure.adapters.in.rest;
 
+import java.util.concurrent.TimeoutException;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,7 +36,8 @@ public class ProductsController {
     })
     @GetMapping("product/{id}/similar")
     public Mono<ResponseEntity<Flux<ProductDetails>>> getSimilarProducts(
-            @Parameter(description = "ID of the product to find similar products for", required = true) @PathVariable String id) {
+            @Parameter(description = "ID of the product to find similar products for", required = true) @PathVariable String id)
+            throws TimeoutException {
 
         return getSimilarProductsUseCase.getSimilarProducts(id)
                 .collectList()

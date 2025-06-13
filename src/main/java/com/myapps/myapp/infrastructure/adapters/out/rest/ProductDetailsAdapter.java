@@ -2,13 +2,10 @@ package com.myapps.myapp.infrastructure.adapters.out.rest;
 
 import java.time.Duration;
 
-import javax.naming.ServiceUnavailableException;
-
-import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientRequestException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import com.myapps.myapp.domain.model.ProductDetails;
 import com.myapps.myapp.domain.port.out.ProductDetailsByIdPort;
@@ -33,22 +30,16 @@ public class ProductDetailsAdapter implements ProductDetailsByIdPort {
                 .uri("/product/{productId}", productId)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError,
-                        response -> Mono.error(
-                                new ResourceNotFoundException(
-                                        "Product details for productId " + productId + " not found")))
+                        response -> Mono.empty())
                 .onStatus(HttpStatusCode::is5xxServerError,
-                        response -> Mono.error(new ServiceUnavailableException("Service unavailable")))
+                        response -> Mono.empty())
                 .bodyToMono(ProductDetails.class)
                 .timeout(Duration.ofSeconds(10)) // <- ahora el timeout ocurre dentro del flujo reintentado
         )
                 .retryWhen(Retry.backoff(3, Duration.ofSeconds(1))
-                        .filter(e -> e instanceof TimeoutException || e instanceof WebClientRequestException))
-                .onErrorResume(e -> {
-                    if (e instanceof TimeoutException) {
-                        return Mono.error(new RuntimeException("Timeout expired"));
-                    }
-                    return Mono.error(new RuntimeException("Error fetching product details", e));
-                });
+                        .filter(e -> e instanceof TimeoutException || e instanceof WebClientResponseException.NotFound))
+                .onErrorResume(WebClientResponseException.NotFound.class, e -> Mono.empty())
+                .onErrorResume(WebClientResponseException.InternalServerError.class, e -> Mono.empty());
     }
 
 }

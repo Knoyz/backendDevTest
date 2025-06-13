@@ -65,12 +65,13 @@ public class RedisCacheAdapter implements CachePort {
             return;
         }
 
-        similarIds.doOnNext(id -> {
-            stringListRedisTemplate.opsForList().rightPush(key, List.of(id))
-                    .doOnSuccess(result -> log.debug("Appended similar product ID {} to key: {}", id, key))
-                    .doOnError(e -> log.error("Error appending similar product ID {} to key: {}", id, key, e))
-                    .subscribe();
-        })
+        similarIds
+                .doOnNext(id -> {
+                    stringListRedisTemplate.opsForList().rightPush(key, List.of(id))
+                            .doOnSuccess(result -> log.debug("Appended similar product ID {} to key: {}", id, key))
+                            .doOnError(e -> log.error("Error appending similar product ID {} to key: {}", id, key, e))
+                            .subscribe();
+                })
                 .doOnComplete(() -> {
                     stringListRedisTemplate.expire(key, ttl == null ? TTL : ttl)
                             .doOnSuccess(result -> log.debug("Set TTL for key: {}", key))
@@ -87,7 +88,7 @@ public class RedisCacheAdapter implements CachePort {
         return productDetailsRedisTemplate.opsForValue()
                 .get(key)
                 .flatMap(details -> {
-                    if (details == null) {
+                    if (details.getId() == null) {
                         log.debug("Cache miss for product details key: {}", key);
                         return Mono.empty();
                     }
