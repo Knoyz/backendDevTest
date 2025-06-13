@@ -29,31 +29,46 @@ public class RedisCacheAdapter implements CachePort {
     @Override
     public Flux<String> getCachedSimilarProducts(String productId) {
         String key = SIMILAR_IDS_PREFIX + productId;
-        log.debug("Checking cache for similar IDs key: {}", key);
+        log.info("Checking cache for similar IDs key: {}", key);
+
         return stringListRedisTemplate.opsForList()
-                .range(key, 0, -1)
-                .flatMap(list -> {
-                    if (list == null || list.isEmpty()) {
-                        log.debug("Cache miss or empty for key: {}", key);
+                .range(key, 0, -1) // Retrieves all elements in the list
+                .flatMap(k -> {
+                    if (k == null || k.isEmpty()) {
+                        log.info("Cache miss or empty for key: {}", key);
                         return Flux.empty();
                     }
-                    log.debug("Cache hit for key: {}, items: {}", key, list.size());
-                    return Flux.fromIterable(list);
-                })
-                .switchIfEmpty(Flux.defer(() -> {
-                    log.debug("Cache miss for key: {}", key);
-                    return Flux.empty();
-                }))
-                .doOnSubscribe(subscription -> log.debug("Subscribed to cache for similar IDs key: {}", key))
-                .onErrorResume(e -> {
-                    if (e instanceof RedisCommandExecutionException) {
-                        log.error("Redis command execution error for key: {}", key, e);
-                        return Mono.empty();
 
-                    }
-                    log.error("Error retrieving cached similar products for key: {}", key, e);
-                    return Flux.empty();
+                    // Flatten the list of lists into a single Flux of strings
+                    return Flux.fromIterable(k);
                 });
+
+        // .opsForList()
+        // .range(key, 0, -1) // Flux<List<String>>
+        // .collectList() // Mono<List<List<String>>>
+        // .flatMapMany(listOfLists -> {
+        // if (listOfLists == null || listOfLists.isEmpty()) {
+        // log.info("Cache miss or empty for key: {}", key);
+        // return Flux.empty();
+        // }
+
+        // // Flatten all lists into one
+        // return Flux.fromIterable(
+        // listOfLists.stream()
+        // .flatMap(List::stream)
+        // .toList());
+        // })
+        // .doOnSubscribe(subscription -> log.debug("Subscribed to cache for similar IDs
+        // key: {}", key))
+        // .onErrorResume(e -> {
+        // if (e instanceof RedisCommandExecutionException) {
+        // log.error("Redis command execution error for key: {}", key, e);
+        // return Flux.empty();
+
+        // }
+        // log.error("Error retrieving cached similar products for key: {}", key, e);
+        // return Flux.empty();
+        // });
     }
 
     @Override
@@ -84,19 +99,19 @@ public class RedisCacheAdapter implements CachePort {
     @Override
     public Mono<ProductDetails> getCachedProductDetails(String productId) {
         String key = DETAILS_PREFIX + productId;
-        log.debug("Checking cache for product details key: {}", key);
+        log.info("Checking cache for product details key: {}", key);
         return productDetailsRedisTemplate.opsForValue()
                 .get(key)
                 .flatMap(details -> {
                     if (details.getId() == null) {
-                        log.debug("Cache miss for product details key: {}", key);
+                        log.info("Cache miss for product details key: {}", key);
                         return Mono.empty();
                     }
-                    log.debug("Cache hit for product details key: {}, details: {}", key, details);
+                    log.info("Cache hit for product details key: {}, details: {}", key, details);
                     return Mono.just(details);
                 })
                 .switchIfEmpty(Mono.empty())
-                .doOnSubscribe(subscription -> log.debug("Subscribed to cache for product details key: {}", key))
+                .doOnSubscribe(subscription -> log.info("Subscribed to cache for product details key: {}", key))
                 .onErrorResume(e -> {
                     if (e instanceof RedisCommandExecutionException) {
                         log.error("Redis command execution error for key: {}", key, e);

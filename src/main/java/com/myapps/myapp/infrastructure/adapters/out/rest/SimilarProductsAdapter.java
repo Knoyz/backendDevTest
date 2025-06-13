@@ -3,7 +3,6 @@ package com.myapps.myapp.infrastructure.adapters.out.rest;
 import java.time.Duration;
 
 import org.springframework.http.HttpStatusCode;
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
@@ -12,26 +11,19 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import com.myapps.myapp.domain.port.out.SimilarProductsByIdPort;
 import com.myapps.myapp.infrastructure.utils.JsonUtils;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.netty.http.client.HttpClient;
 import reactor.util.retry.Retry;
 
 // @Primary
+@RequiredArgsConstructor
 @Slf4j
 @Component
 public class SimilarProductsAdapter implements SimilarProductsByIdPort {
 
     private final WebClient webClient;
-
-    public SimilarProductsAdapter(WebClient.Builder webClientBuilder) {
-        this.webClient = webClientBuilder
-                .baseUrl("http://localhost:3001")
-                .clientConnector(new ReactorClientHttpConnector(
-                        HttpClient.create().responseTimeout(Duration.ofSeconds(5))))
-                .build();
-    }
 
     /**
      * Retrieves similar products based on the provided product ID.
@@ -62,8 +54,8 @@ public class SimilarProductsAdapter implements SimilarProductsByIdPort {
                 .flatMapMany(json -> Flux.fromIterable((JsonUtils
                         .parseJsonToList(json))))
 
-                .onErrorResume(WebClientResponseException.NotFound.class, e -> Mono.empty())
-                .onErrorResume(WebClientResponseException.InternalServerError.class, e -> Mono.empty());
+                .onErrorResume(WebClientResponseException.NotFound.class, e -> Flux.empty())
+                .onErrorResume(WebClientResponseException.InternalServerError.class, e -> Flux.empty());
     }
 
 }

@@ -11,21 +11,23 @@ import com.myapps.myapp.domain.model.ProductDetails;
 import com.myapps.myapp.domain.port.out.ProductDetailsByIdPort;
 
 import io.netty.handler.timeout.TimeoutException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 
 // @Primary
+@RequiredArgsConstructor
+@Slf4j
 @Component
 public class ProductDetailsAdapter implements ProductDetailsByIdPort {
 
     private final WebClient webClient;
 
-    public ProductDetailsAdapter(WebClient.Builder webClientBuilder) {
-        this.webClient = webClientBuilder.baseUrl("http://localhost:3001").build();
-    }
-
     @Override
     public Mono<ProductDetails> getProductDetailsById(String productId) {
+        log.info("Fetching product details for productId: {}", productId);
+
         return Mono.defer(() -> webClient.get()
                 .uri("/product/{productId}", productId)
                 .retrieve()
