@@ -14,6 +14,7 @@ import okhttp3.mockwebserver.MockWebServer;
 class SimilarProductsAdapterTest {
 
     private static MockWebServer mockWebServer;
+    @SuppressWarnings("unused")
     private SimilarProductsAdapter similarProductsAdapter;
 
     @BeforeAll
@@ -37,7 +38,7 @@ class SimilarProductsAdapterTest {
     }
 
     @Test
-    void shouldReturnSimilarProductIds_whenResponseIsOk() throws Exception {
+    void shouldReturnSimilarProductIds_whenResponseIsOk() {
         String responseBody = "[\"2\",\"3\",\"4\"]";
         mockWebServer.enqueue(new okhttp3.mockwebserver.MockResponse()
                 .setResponseCode(200)
@@ -57,7 +58,7 @@ class SimilarProductsAdapterTest {
     }
 
     @Test
-    void shouldReturnEmpty_whenNotFound() throws Exception {
+    void shouldReturnEmpty_whenNotFound() {
         mockWebServer.enqueue(new okhttp3.mockwebserver.MockResponse()
                 .setResponseCode(404));
 
@@ -71,7 +72,7 @@ class SimilarProductsAdapterTest {
     }
 
     @Test
-    void shouldReturnEmpty_whenInternalServerError() throws Exception {
+    void shouldReturnEmpty_whenInternalServerError() {
         mockWebServer.enqueue(new okhttp3.mockwebserver.MockResponse()
                 .setResponseCode(500));
 
@@ -94,8 +95,8 @@ class SimilarProductsAdapterTest {
         SimilarProductsAdapter adapter = new SimilarProductsAdapter(
                 WebClient.builder().baseUrl("http://localhost:" + mockWebServer.getPort()).build());
 
-        Assertions.assertThrows(RuntimeException.class,
-                () -> adapter.getIdsOfSimilarProducts("timeout").blockFirst());
+        var flux = adapter.getIdsOfSimilarProducts("timeout");
+        Assertions.assertThrows(RuntimeException.class, flux::blockFirst);
     }
 
 }

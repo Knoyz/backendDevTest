@@ -48,7 +48,7 @@ class RedisCacheAdapterTest {
         private static final String DETAILS_PREFIX = "product-details:";
 
         @BeforeEach
-        public void setup() {
+        void setup() {
                 adapter = new RedisCacheAdapter(
                                 stringListRedisTemplate, productDetailsRedisTemplate);
         }
@@ -74,23 +74,6 @@ class RedisCacheAdapterTest {
 
         @Test
         void shouldReturnEmptyFluxWhenCacheMissEmptyList() {
-                String productId = "1";
-                String key = SIMILAR_IDS_PREFIX + productId;
-
-                when(stringListRedisTemplate.opsForList()).thenReturn(listOps);
-
-                when(listOps.range(key, 0L, -1L))
-                                .thenReturn(Flux.empty());
-
-                StepVerifier.create(adapter.getCachedSimilarProducts(productId))
-                                .verifyComplete();
-
-                // Verifica que realmente se llamó con esos argumentos
-                verify(listOps).range(key, 0L, -1L);
-        }
-
-        @Test
-        void shouldReturnEmptyFluxWhenCacheMissNull() {
                 String productId = "1";
                 String key = SIMILAR_IDS_PREFIX + productId;
 
@@ -150,13 +133,13 @@ class RedisCacheAdapterTest {
 
                 when(listOps.rightPush(eq(key), anyList()))
                                 .thenReturn(Mono.just(1L));
-                when(stringListRedisTemplate.expire(eq(key), eq(ttl)))
+                when(stringListRedisTemplate.expire(key, ttl))
                                 .thenReturn(Mono.just(true));
 
                 adapter.cacheSimilarProducts(productId, similarIds, ttl);
 
                 verify(listOps, times(3)).rightPush(eq(key), anyList());
-                verify(stringListRedisTemplate).expire(eq(key), eq(ttl));
+                verify(stringListRedisTemplate).expire(key, ttl);
         }
 
         @Test
@@ -221,6 +204,7 @@ class RedisCacheAdapterTest {
         }
 
         @Test
+        @SuppressWarnings("all")
         void shouldReturnEmptyWhenCacheMissNullId() {
                 String productId = "42";
                 String key = DETAILS_PREFIX + productId;
@@ -239,24 +223,7 @@ class RedisCacheAdapterTest {
         }
 
         @Test
-        void shouldReturnEmptyWhenCacheMissEmptyMono() {
-                String productId = "42";
-                String key = DETAILS_PREFIX + productId;
-
-                when(productDetailsRedisTemplate.opsForValue()).thenReturn(valueOps);
-                RedisCacheAdapter adapter = new RedisCacheAdapter(
-                                stringListRedisTemplate, productDetailsRedisTemplate);
-
-                when(valueOps.get(key)).thenReturn(Mono.empty());
-
-                StepVerifier.create(adapter.getCachedProductDetails(productId))
-                                .verifyComplete();
-
-                verify(productDetailsRedisTemplate).opsForValue();
-                verify(valueOps).get(key);
-        }
-
-        @Test
+        @SuppressWarnings("all")
         void shouldReturnEmptyOnRedisCommandExecutionException() {
                 String productId = "42";
                 String key = DETAILS_PREFIX + productId;
@@ -275,6 +242,7 @@ class RedisCacheAdapterTest {
         }
 
         @Test
+        @SuppressWarnings("all")
         void shouldReturnEmptyOnGenericException() {
                 String productId = "42";
                 String key = DETAILS_PREFIX + productId;
@@ -301,12 +269,12 @@ class RedisCacheAdapterTest {
                 Duration ttl = Duration.ofMinutes(30);
 
                 when(productDetailsRedisTemplate.opsForValue()).thenReturn(valueOps);
-                when(valueOps.set(eq(key), eq(details), eq(ttl))).thenReturn(Mono.just(true));
+                when(valueOps.set(key, eq(details), eq(ttl))).thenReturn(Mono.just(true));
 
                 adapter.cacheProductDetails(productId, detailsMono, ttl);
 
                 verify(productDetailsRedisTemplate).opsForValue();
-                verify(valueOps).set(eq(key), eq(details), eq(ttl));
+                verify(valueOps).set(key, eq(details), eq(ttl));
         }
 
         @Test

@@ -14,14 +14,10 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.KafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.core.DefaultKafkaProducerFactory;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 
-import com.myapps.myapp.domain.events.ProductsSimilarIdsEvent;
-import com.myapps.myapp.domain.events.RequestDataWithProductIdEvent;
+import com.myapps.myapp.domain.events.ProductDetailsChangedEvent;
 
 //coverage:ignore 
 @EnableKafka
@@ -29,6 +25,7 @@ import com.myapps.myapp.domain.events.RequestDataWithProductIdEvent;
 public class KafkaConfig {
 
     private static final Map<String, Object> configProps = new HashMap<>();
+
     static {
         configProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         configProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -38,38 +35,18 @@ public class KafkaConfig {
     }
 
     @Bean
-    public ProducerFactory<String, RequestDataWithProductIdEvent> producerFactoryRequestDataWithProductIdEvent() {
-        return new DefaultKafkaProducerFactory<>(configProps);
-    }
-
-    @Bean
-    public ProducerFactory<String, String> producerFactory() {
-        return new DefaultKafkaProducerFactory<>(configProps);
-    }
-
-    @Bean
-    public KafkaTemplate<String, String> kafkaTemplate() {
-        return new KafkaTemplate<>(producerFactory());
-    }
-
-    @Bean
-    public NewTopic similarProductIdsTopic() {
-        return new NewTopic("similar-product-ids", 1, (short) 1);
-    }
-
-    @Bean
     public NewTopic productDetailsTopic() {
-        return new NewTopic("product-details", 1, (short) 1);
+        return new NewTopic("PRODUCT_DETAILS_CHANGED", 1, (short) 1);
     }
 
     @Bean
-    public ConsumerFactory<String, ProductsSimilarIdsEvent> consumerFactory() {
+    public ConsumerFactory<String, ProductDetailsChangedEvent> consumerFactory() {
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
 
     @Bean
-    public KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<String, ProductsSimilarIdsEvent>> productsSimilarIdsEventConsumer() {
-        ConcurrentKafkaListenerContainerFactory<String, ProductsSimilarIdsEvent> factory = new ConcurrentKafkaListenerContainerFactory<>();
+    public KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<String, ProductDetailsChangedEvent>> productDetailsChangedKafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, ProductDetailsChangedEvent> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
         return factory;
     }

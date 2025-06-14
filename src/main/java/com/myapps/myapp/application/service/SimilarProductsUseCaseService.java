@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import com.myapps.myapp.domain.model.ProductDetails;
 import com.myapps.myapp.domain.port.in.SimilarProductsUseCase;
 import com.myapps.myapp.domain.port.out.CachePort;
-import com.myapps.myapp.domain.port.out.EventPublisherPort;
 import com.myapps.myapp.domain.port.out.ProductDetailsByIdPort;
 import com.myapps.myapp.domain.port.out.SimilarProductsByIdPort;
 
@@ -23,12 +22,9 @@ public class SimilarProductsUseCaseService implements SimilarProductsUseCase {
 
         private final SimilarProductsByIdPort similarProductsByIdPort;
         private final ProductDetailsByIdPort productDetailsByIdPort;
-        private final EventPublisherPort eventPublisherPort;
         private final CachePort cachePort;
 
         private static final Duration TTL = Duration.ofHours(1);
-        private static final String SIMILAR_PRODUCTS_IDS = "similar_products_ids";
-        private static final String SIMILAR_PRODUCTS_DETAILS_FETCH = "similar_products_details_fetch";
 
         /**
          * Retrieves similar products with details based on the provided product ID.
@@ -39,8 +35,6 @@ public class SimilarProductsUseCaseService implements SimilarProductsUseCase {
          */
         @Override
         public Flux<ProductDetails> getSimilarProducts(String productId) {
-                // eventPublisherPort.publishGetSimilarProductsEvent(SIMILAR_PRODUCTS_IDS,
-                // productId);
 
                 return cachePort.getCachedSimilarProducts(productId)
                                 .switchIfEmpty(
@@ -61,8 +55,6 @@ public class SimilarProductsUseCaseService implements SimilarProductsUseCase {
                                                                 }))
                                 .flatMap(this::fetchProductDetails)
                                 .filter(details -> details != null && details.getId() != null);
-                // .doOnNext(details -> eventPublisherPort.publishFetchProductDetailsEvent(
-                // SIMILAR_PRODUCTS_DETAILS_FETCH, JsonUtils.toJson(details)));
         }
 
         /**

@@ -12,30 +12,37 @@ package com.myapps.myapp.infrastructure.adapters.out.grpc;
 // import reactor.core.publisher.Flux;
 
 // @Component
-// public class SimilarProductsGrpcAdapter implements SimilarProductsByIdPort {
+@SuppressWarnings("all")
+public class SimilarProductsGrpcAdapter
+// implements SimilarProductsByIdPort
+{
 
-// private final ExternalProductServiceGrpc.ExternalProductServiceBlockingStub
-// blockingStub;
+    // private final ExternalProductServiceGrpc.ExternalProductServiceBlockingStub
+    // blockingStub;
 
-// public SimilarProductsGrpcAdapter() {
-// ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 3001)
-// .usePlaintext()
-// .build();
-// this.blockingStub = ExternalProductServiceGrpc.newBlockingStub(channel);
-// }
+    // public SimilarProductsGrpcAdapter() {
+    // ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 3001)
+    // .usePlaintext()
+    // .build();
+    // this.blockingStub = ExternalProductServiceGrpc.newBlockingStub(channel);
+    // }
 
-// @Override
-// public Flux<String> getSimilarProducts(String productId) {
-// try {
-// SimilarProductIdsRequest request = SimilarProductIdsRequest.newBuilder()
-// .setProductId(productId)
-// .build();
-// SimilarProductIdsResponse response =
-// blockingStub.getSimilarProductIds(request);
-// return Flux.fromIterable(response.getProductIdsList());
-// } catch (Exception e) {
-// return Flux.error(new RuntimeException("Error fetching similar product IDs
-// via gRPC", e));
-// }
-// }
-// }
+    // @Override
+    // public Flux<String> getSimilarProducts(String productId) {
+    // try {
+    // SimilarProductIdsRequest request = SimilarProductIdsRequest.newBuilder()
+    // .setProductId(productId)
+    // .build();
+    // SimilarProductIdsResponse response =
+    // blockingStub.getSimilarProductIds(request);
+    // return Flux.fromIterable(response.getProductIdsList());
+    // } catch (Exception e) {
+    // return Flux.error(new RuntimeException("Error fetching similar product IDs
+    // via gRPC", e));
+    // }
+    // }
+
+    // Attention: no need for this adapter for now, just an example of gRPC,
+    // a better way
+    // to do sincronous calls with other microservices
+}
