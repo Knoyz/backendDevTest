@@ -90,11 +90,6 @@ class SimilarProductsUseCaseServiceTest {
         when(similarProductsByIdPort.getIdsOfSimilarProducts(anyString())).thenReturn(Flux.empty());
         when(productDetailsByIdPort.getProductDetailsById(anyString())).thenReturn(Mono.empty());
 
-        // Assuming ports use WebClient internally, inject it (if applicable)
-        // If your ports have a setter or constructor for WebClient, inject it here
-        // Example: ReflectionTestUtils.setField(similarProductsByIdPort, "webClient",
-        // webClient);
-
         // Test multiple calls
         int numberOfCalls = 3;
         for (int i = 0; i < numberOfCalls; i++) {
@@ -127,4 +122,129 @@ class SimilarProductsUseCaseServiceTest {
         verify(similarProductsByIdPort).getIdsOfSimilarProducts(productId);
         verify(productDetailsByIdPort, never()).getProductDetailsById(anyString());
     }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void shouldFetchAndCacheSimilarProducts_whenNotInCache() {
+        String productId = "10";
+        List<String> similarIds = List.of("11", "12");
+        ProductDetails details11 = new ProductDetails("11", "Product 11", new BigDecimal("100.0"), true);
+        ProductDetails details12 = new ProductDetails("12", "Product 12", new BigDecimal("200.0"), true);
+
+        // Cache is empty for similar products
+        when(cachePort.getCachedSimilarProducts(productId)).thenReturn(Flux.empty());
+        // Fetch similar IDs from port
+        when(similarProductsByIdPort.getIdsOfSimilarProducts(productId)).thenReturn(Flux.fromIterable(similarIds));
+        // Cache is empty for product details
+        when(cachePort.getCachedProductDetails("11")).thenReturn(Mono.empty());
+        when(cachePort.getCachedProductDetails("12")).thenReturn(Mono.empty());
+        // Fetch product details from port
+        when(productDetailsByIdPort.getProductDetailsById("11")).thenReturn(Mono.just(details11));
+        when(productDetailsByIdPort.getProductDetailsById("12")).thenReturn(Mono.just(details12));
+
+        StepVerifier.create(service.getSimilarProducts(productId))
+                .expectNext(details11)
+                .expectNext(details12)
+                .verifyComplete();
+
+        verify(cachePort).getCachedSimilarProducts(productId);
+        verify(similarProductsByIdPort).getIdsOfSimilarProducts(productId);
+        // It verify twice because it's called once in the declaration
+        verify(cachePort, times(2)).cacheSimilarProducts(eq(productId), any(), any());
+        verify(cachePort).getCachedProductDetails("11");
+        verify(cachePort).getCachedProductDetails("12");
+        verify(productDetailsByIdPort).getProductDetailsById("11");
+        verify(productDetailsByIdPort).getProductDetailsById("12");
+        verify(cachePort).cacheProductDetails(eq("11"), any(Mono.class), any());
+        verify(cachePort).cacheProductDetails(eq("12"), any(Mono.class), any());
+    }
+
+    @Test
+    void shouldNotCacheOrFetchDetails_whenSimilarIdIsNull() {
+        String productId = "20";
+        // Simulate a null similarId
+        when(cachePort.getCachedSimilarProducts(productId)).thenReturn(Flux.empty());
+        when(similarProductsByIdPort.getIdsOfSimilarProducts(productId)).thenReturn(Flux.empty());
+
+        StepVerifier.create(service.getSimilarProducts(productId))
+                .verifyComplete();
+
+        verify(cachePort).getCachedSimilarProducts(productId);
+        verify(similarProductsByIdPort).getIdsOfSimilarProducts(productId);
+        verify(cachePort, never()).cacheSimilarProducts(anyString(), any(), any());
+        verify(cachePort, never()).getCachedProductDetails(anyString());
+        verify(productDetailsByIdPort, never()).getProductDetailsById(anyString());
+    }
+
+    @Test
+    void shouldNotCacheDetails_whenProductDetailsIsNull() {
+        String productId = "30";
+        String similarId = "31";
+        // Cache is empty for similar products
+        when(cachePort.getCachedSimilarProducts(productId)).thenReturn(Flux.empty());
+        when(similarProductsByIdPort.getIdsOfSimilarProducts(productId)).thenReturn(Flux.just(similarId));
+        // Cache is empty for product details
+        when(cachePort.getCachedProductDetails(similarId)).thenReturn(Mono.empty());
+        // Product details port returns null
+        when(productDetailsByIdPort.getProductDetailsById(similarId)).thenReturn(Mono.justOrEmpty(null));
+
+        StepVerifier.create(service.getSimilarProducts(productId))
+                .verifyComplete();
+
+        verify(cachePort).getCachedSimilarProducts(productId);
+        verify(similarProductsByIdPort).getIdsOfSimilarProducts(productId);
+        verify(cachePort).getCachedProductDetails(similarId);
+        verify(productDetailsByIdPort).getProductDetailsById(similarId);
+        verify(cachePort, never()).cacheProductDetails(anyString(), any(), any());
+    }
+
+    @Test
+    void fetchProductDetails_shouldReturnFromCache() {
+        String similarId = "51";
+        ProductDetails details = new ProductDetails("51", "Product 51", new BigDecimal("51.0"), true);
+
+        when(cachePort.getCachedProductDetails(similarId)).thenReturn(Mono.just(details));
+        when(productDetailsByIdPort.getProductDetailsById(anyString())).thenReturn(Mono.empty());
+
+        StepVerifier.create(service.fetchProductDetails(similarId))
+                .expectNext(details)
+                .verifyComplete();
+
+        verify(cachePort).getCachedProductDetails(similarId);
+        verify(productDetailsByIdPort, times(1)).getProductDetailsById(anyString());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void fetchProductDetails_shouldFetchAndCache_whenNotInCache() {
+        String similarId = "61";
+        ProductDetails details = new ProductDetails("61", "Product 61", new BigDecimal("61.0"), true);
+
+        when(cachePort.getCachedProductDetails(similarId)).thenReturn(Mono.empty());
+        when(productDetailsByIdPort.getProductDetailsById(similarId)).thenReturn(Mono.just(details));
+
+        StepVerifier.create(service.fetchProductDetails(similarId))
+                .expectNext(details)
+                .verifyComplete();
+
+        verify(cachePort).getCachedProductDetails(similarId);
+        verify(productDetailsByIdPort).getProductDetailsById(similarId);
+        verify(cachePort).cacheProductDetails(eq(similarId), any(Mono.class), any());
+    }
+
+    @Test
+    void fetchProductDetails_shouldNotCache_whenDetailsIsNull() {
+        String similarId = "71";
+
+        when(cachePort.getCachedProductDetails(similarId)).thenReturn(Mono.empty());
+        when(productDetailsByIdPort.getProductDetailsById(similarId)).thenReturn(Mono.justOrEmpty(null));
+
+        StepVerifier.create(service.fetchProductDetails(similarId))
+                .verifyComplete();
+
+        verify(cachePort).getCachedProductDetails(similarId);
+        verify(productDetailsByIdPort).getProductDetailsById(similarId);
+        verify(cachePort, never()).cacheProductDetails(anyString(), any(), any());
+    }
+
 }

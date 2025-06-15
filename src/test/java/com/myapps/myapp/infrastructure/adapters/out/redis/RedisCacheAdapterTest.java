@@ -261,6 +261,7 @@ class RedisCacheAdapterTest {
         }
 
         @Test
+        @SuppressWarnings("all")
         void shouldCacheProductDetailsAndSetTTL() {
                 String productId = "99";
                 String key = DETAILS_PREFIX + productId;
@@ -269,12 +270,12 @@ class RedisCacheAdapterTest {
                 Duration ttl = Duration.ofMinutes(30);
 
                 when(productDetailsRedisTemplate.opsForValue()).thenReturn(valueOps);
-                when(valueOps.set(key, eq(details), eq(ttl))).thenReturn(Mono.just(true));
+                when(valueOps.set(key, details, ttl)).thenReturn(Mono.just(true));
 
                 adapter.cacheProductDetails(productId, detailsMono, ttl);
 
                 verify(productDetailsRedisTemplate).opsForValue();
-                verify(valueOps).set(key, eq(details), eq(ttl));
+                verify(valueOps).set(eq(key), eq(details), eq(ttl));
         }
 
         @Test
